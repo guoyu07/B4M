@@ -1,0 +1,7 @@
+{
+	"HOST": "localhost",
+	"PORT": 8084,
+	"DEBUG": true,
+	"LOG_LEVEL": "DEBUG",
+	"THEME": "test"
+}
