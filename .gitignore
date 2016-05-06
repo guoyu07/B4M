@@ -1,5 +1,8 @@
-.DS_Store
 *.pyc
 *.pyo
+.DS_Store
+.tags
+.tags_sorted_by_file
+__pycache__
 config.json
 log.txt
