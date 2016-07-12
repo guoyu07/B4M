@@ -6,6 +6,7 @@ import os
 import json
 
 from flask.ext.script import Manager
+import jinja2
 
 from b4m import app
 from b4m.libs.utility import filter_cofig, set_log
@@ -35,6 +36,16 @@ def runserver(conf, **config):
         app.config['LOG_LEVEL'] = 'debug'
 
     set_log(app.config['LOG_LEVEL'], app.config['LOG_FILE'])
+
+    tmp_dir = [os.path.join(app.root_path, 'templates', 'default')]
+
+    if app.config['THEME'] != 'default':
+        tmp_dir.insert(0, os.path.join(app.root_path, 'templates', app.config['THEME']))
+
+    app.jinja_loader = jinja2.ChoiceLoader([
+        app.jinja_loader,
+        jinja2.FileSystemLoader(tmp_dir),
+    ])
 
     app.run(app.config['HOST'], app.config['PORT'], app.config['DEBUG'])
 

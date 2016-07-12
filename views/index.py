@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 # -*- author: chat@jat.email -*-
 
-from flask.views import View
-from flask import render_template
+from b4m.views.base import BaseView
 
 
-class IndexView(View):
+class IndexView(BaseView):
     def dispatch_request(self):
-        return render_template('index.html')
+        return self.render_template('index.html', title='Hello, World!')
