@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 # -*- author: chat@jat.email -*-
 
+import sys
 import os
 import json
 
-from flask.ext.script import Manager
+from flask_script import Manager
 import jinja2
+
+sys.path.append('/data/root/blog')
 
 from b4m import app
 from b4m.libs.utility import filter_cofig, set_log
