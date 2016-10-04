@@ -3,14 +3,20 @@ version: 2.0
 test:
   image: daocloud/ci-python:3.4
 
-  env:
-    - LANG = "zh_CN.UTF-8"
-
   install:
     - pip install -Ue .
 
   before_script:
-    sudo locale-gen zh_CN.UTF-8
+    sudo locale-gen zh_CN.UTF-8 && sudo update-locale LANG=zh_CN.UTF-8
 
   script:
     - python b4m/libs/encryptor.py
+
+build:
+  image:
+    dockerfile_path: Dockerfile
+
+    build_dir: /
+
+    cache: true
+
