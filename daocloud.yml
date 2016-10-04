@@ -3,17 +3,14 @@ version: 2.0
 test:
   image: daocloud/ci-python:3.4
 
+  env:
+    - LANG = "C.UTF-8"
+
   install:
     - apt-get update && apt-get install -y language-pack-zh-hans
     - pip install -Ue .
 
   before_script:
-    - locale
-    - echo $LANG
-    - locale-gen zh_CN.UTF-8
-    - locale
-    - echo $LANG
-    - export LANG=zh_CN.UTF-8
     - locale
     - echo $LANG
 

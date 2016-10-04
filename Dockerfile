@@ -5,3 +5,5 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 
 RUN pip install -Ue .
+
+CMD python b4m/libs/encryptor.py
