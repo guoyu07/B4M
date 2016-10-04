@@ -1,0 +1,10 @@
+version: 2.0
+
+test:
+  image: daocloud/ci-python:3.4
+
+  install:
+    - pip install -Ue .
+
+  script:
+    - python b4m/libs/encryptor.py
