@@ -3,19 +3,29 @@
 # -*- author: chat@jat.email -*-
 
 import os
+import base64
+from binascii import Error
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend as _default_backend
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignature, InvalidTag
 
 
 default_backend = _default_backend()
 
 
+def encode(*bytes):
+    return base64.b64encode(bytes[0]).decode('ascii') if len(bytes) == 1 else [encode(i) for i in bytes]
+
+
+def decode(*str):
+    return base64.b64decode(str[0], validate=True) if len(str) == 1 else [decode(i) for i in str]
+
+
 def encrypt_password(password, key=None):
     if key:
-        key = bytes.fromhex(key)
+        key = decode(key)
         verify = True
     else:
         key = os.urandom(32)
@@ -27,42 +37,87 @@ def encrypt_password(password, key=None):
     if verify:
         return h
 
-    return h.finalize().hex(), key.hex()
+    return encode(h.finalize(), key)
 
 
 def verify_password(password, key, encrypted_password):
     try:
-        encrypt_password(password, key).verify(bytes.fromhex(encrypted_password))
-    except InvalidSignature:
+        encrypt_password(password, key).verify(decode(encrypted_password))
+    except (Error, InvalidSignature):
         return False
-    else:
-        return True
+
+    return True
 
 
-def encrypt(plaintext, key, associated_data):
+def gcm_encrypt(plaintext, key, associated_data):
+    # AES len(decode(key))*8 GCM
+    # only 128, 192 or 256 bits long supported.
+
+    try:
+        key = decode(key)
+    except Error:
+        return False
+
+    # 12 bytes IV is strongly suggested. do NOT change it.
     iv = os.urandom(12)
 
-    encryptor = Cipher(
-        algorithms.AES(bytes.fromhex(key)),
-        modes.GCM(iv),
-        backend=default_backend
-    ).encryptor()
+    encryptor = Cipher(algorithms.AES(key), modes.GCM(iv), backend=default_backend).encryptor()
 
     encryptor.authenticate_additional_data(associated_data.encode('utf-8'))
 
-    return (encryptor.update(plaintext.encode('utf-8')) + encryptor.finalize()).hex(), iv.hex(), encryptor.tag.hex()
+    return encode(encryptor.update(plaintext.encode('utf-8')) + encryptor.finalize(), iv, encryptor.tag)
 
 
-def decrypt(ciphertext, key, associated_data, iv, tag):
-    decryptor = Cipher(
-        algorithms.AES(bytes.fromhex(key)),
-        modes.GCM(bytes.fromhex(iv), bytes.fromhex(tag)),
-        backend=default_backend
-    ).decryptor()
+def gcm_decrypt(ciphertext, key, associated_data, iv, tag):
+    try:
+        ciphertext, key, iv, tag = decode(ciphertext, key, iv, tag)
+    except Error:
+        return False
+
+    decryptor = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=default_backend).decryptor()
 
     decryptor.authenticate_additional_data(associated_data.encode('utf-8'))
 
-    return (decryptor.update(bytes.fromhex(ciphertext)) + decryptor.finalize()).decode('utf-8')
+    try:
+        return (decryptor.update(ciphertext) + decryptor.finalize()).decode('utf-8')
+    except InvalidTag:
+        return False
+
+
+def encrypt(plaintext, key):
+    # AES len(decode(key))*8 CBC
+    # only 128, 192 or 256 bits long supported.
+
+    try:
+        key = decode(key)
+    except Error:
+        return False
+
+    # iv size = aes block size = 128 bits = 16 bytes
+    iv = os.urandom(16)
+
+    encryptor = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend).encryptor()
+
+    plaintext = plaintext.encode('utf-8')
+
+    if len(plaintext) % 16 != 0:
+        plaintext += b' ' * (16 - len(plaintext) % 16)
+
+    return encode(encryptor.update(plaintext) + encryptor.finalize(), iv)
+
+
+def decrypt(ciphertext, key, iv):
+    try:
+        ciphertext, key, iv = decode(ciphertext, key, iv)
+    except Error:
+        return False
+
+    decryptor = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend).decryptor()
+
+    try:
+        return (decryptor.update(ciphertext) + decryptor.finalize()).decode('utf-8').strip()
+    except UnicodeDecodeError:
+        return False
 
 
 if __name__ == '__main__':
@@ -71,20 +126,28 @@ if __name__ == '__main__':
     print(encrypted_password, key)
     print(
         verify_password(password, key, encrypted_password),
-        verify_password('wrong password', key, encrypted_password)
+        verify_password('wrong password', key, encrypted_password),
+        verify_password(password, encode('wrong key'.encode('utf-8')), encrypted_password),
+        verify_password(password, key, 'wrong encrypted password')
     )
 
-    key = os.urandom(32).hex()
-    ciphertext, iv, tag = encrypt(
-        u'我能吞下玻璃而不伤身体。',
-        key,
-        'authenticated but not encrypted payload'
-    )
+    key = encode(os.urandom(32))
+    ciphertext, iv, tag = gcm_encrypt(u'我能吞下玻璃而不伤身体。', key, 'authenticated but not encrypted payload')
     print(ciphertext, key, iv, tag)
-    print(decrypt(
-        ciphertext,
-        key,
-        'authenticated but not encrypted payload',
-        iv,
-        tag
-    ))
+    print(
+        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', iv, tag),
+        gcm_decrypt(encode('wrong ciphertext'.encode('utf-8')), key, 'wrong authenticated data', iv, tag),
+        gcm_decrypt(ciphertext, key, 'wrong authenticated data', iv, tag),
+        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', encode('wrong iv'.encode('utf-8')), tag),
+        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', iv, 'wrong tag')
+    )
+
+    key = encode(os.urandom(32))
+    ciphertext, iv = encrypt('我又吞下了玻璃。', key)
+    print(ciphertext, key, iv)
+    print(
+        decrypt(ciphertext, key, iv),
+        decrypt(encode('wrong ciphertext'.encode('utf-8')), key, iv),
+        decrypt(ciphertext, key, 'wrong iv'),
+        decrypt(ciphertext, key, encode(os.urandom(16)))
+    )
