@@ -31,5 +31,5 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['Flask', 'Flask-Script', 'mongoengine', 'redis'],
+    install_requires=['Flask', 'Flask-Script', 'mongoengine', 'redis', 'cryptography'],
 )
