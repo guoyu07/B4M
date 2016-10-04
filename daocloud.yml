@@ -7,7 +7,7 @@ test:
     - pip install -Ue .
 
   before_script:
-    locale-gen zh_CN.UTF-8 && update-locale LANG=zh_CN.UTF-8
+    - locale-gen zh_CN.UTF-8 && update-locale LANG=zh_CN.UTF-8
 
   script:
     - python b4m/libs/encryptor.py
