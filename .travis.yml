@@ -11,5 +11,5 @@ env:
 install: pip install -Ue .
 script: python setup.py test
 after_success:
-  - nosetest --with-coverage
+  - nosetests --with-coverage
   - bash <(curl -s https://codecov.io/bash)
