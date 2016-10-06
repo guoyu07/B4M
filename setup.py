@@ -34,5 +34,5 @@ setup(
     install_requires=['Flask', 'Flask-Script', 'mongoengine', 'redis', 'cryptography'],
 
     test_suite='nose.collector',
-    tests_require=['nose', 'coverage']
+    tests_require=['nose']
 )
