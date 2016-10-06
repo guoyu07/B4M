@@ -8,8 +8,6 @@ import json
 
 from flask_script import Manager
 
-sys.path.append('/data/root/blog')
-
 from b4m import app
 from b4m.libs.utility import filter_cofig, set_log
 

@@ -118,36 +118,3 @@ def decrypt(ciphertext, key, iv):
         return (decryptor.update(ciphertext) + decryptor.finalize()).decode('utf-8').strip()
     except UnicodeDecodeError:
         return False
-
-
-if __name__ == '__main__':
-    password = 'this is a password'
-    encrypted_password, key = encrypt_password(password)
-    print(encrypted_password, key)
-    print(
-        verify_password(password, key, encrypted_password),
-        verify_password('wrong password', key, encrypted_password),
-        verify_password(password, encode('wrong key'.encode('utf-8')), encrypted_password),
-        verify_password(password, key, 'wrong encrypted password')
-    )
-
-    key = encode(os.urandom(32))
-    ciphertext, iv, tag = gcm_encrypt(u'我能吞下玻璃而不伤身体。', key, 'authenticated but not encrypted payload')
-    print(ciphertext, key, iv, tag)
-    print(
-        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', iv, tag),
-        gcm_decrypt(encode('wrong ciphertext'.encode('utf-8')), key, 'wrong authenticated data', iv, tag),
-        gcm_decrypt(ciphertext, key, 'wrong authenticated data', iv, tag),
-        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', encode('wrong iv'.encode('utf-8')), tag),
-        gcm_decrypt(ciphertext, key, 'authenticated but not encrypted payload', iv, 'wrong tag')
-    )
-
-    key = encode(os.urandom(32))
-    ciphertext, iv = encrypt('我又吞下了玻璃。', key)
-    print(ciphertext, key, iv)
-    print(
-        decrypt(ciphertext, key, iv),
-        decrypt(encode('wrong ciphertext'.encode('utf-8')), key, iv),
-        decrypt(ciphertext, key, 'wrong iv'),
-        decrypt(ciphertext, key, encode(os.urandom(16)))
-    )

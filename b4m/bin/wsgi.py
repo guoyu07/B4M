@@ -4,6 +4,4 @@
 
 import sys
 
-sys.path.append('/data/root/blog')
-
 from b4m import app

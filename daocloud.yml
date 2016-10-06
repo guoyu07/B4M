@@ -5,12 +5,13 @@ test:
 
   env:
     - LANG = "C.UTF-8"
+    - PYTHONPATH = "."
 
   install:
     - pip install -Ue .
 
   script:
-    - python b4m/libs/encryptor.py
+    - python setup.py test
 
 build:
   image:
