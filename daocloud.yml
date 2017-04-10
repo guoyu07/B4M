@@ -1,24 +1,16 @@
 version: 2.0
-
 test:
   image: daocloud/ci-python:3.4
-
   env:
     - LANG = "C.UTF-8"
     - PYTHONPATH = "."
-
   install:
-    - pip install -Ue .
     - pip install pyparsing
-
+    - pip install -Ue .
   script:
     - python setup.py test
-
 build:
   image:
     dockerfile_path: Dockerfile
-
     build_dir: /
-
     cache: true
-
