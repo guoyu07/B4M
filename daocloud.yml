@@ -5,7 +5,7 @@ test:
     - LANG = "C.UTF-8"
     - PYTHONPATH = "."
   install:
-    - pip install pyparsing
+    - pip install pyparsing appdirs
     - pip install -Ue .
   script:
     - python setup.py test
