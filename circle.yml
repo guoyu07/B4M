@@ -4,3 +4,5 @@ machine:
 dependencies:
   pre:
     - pip install -Ue .
+  post:
+    - rm -r ~/.virtualenvs
