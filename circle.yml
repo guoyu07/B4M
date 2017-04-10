@@ -1,0 +1,4 @@
+dependencies:
+  - pip install -Ue .
+  - pip install -U nose coverage
+  
