@@ -9,6 +9,7 @@ test:
 
   install:
     - pip install -Ue .
+    - pip install pyparsing
 
   script:
     - python setup.py test
