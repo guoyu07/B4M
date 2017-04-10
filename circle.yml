@@ -2,7 +2,5 @@ machine:
   python:
     version: 3.6.1
 dependencies:
-  pre:
+  override:
     - pip install -Ue .
-  post:
-    - pip uninstall B4M
