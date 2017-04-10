@@ -4,3 +4,4 @@ machine:
 dependencies:
   override:
     - pip install -Ue .
+    - pip install tox
